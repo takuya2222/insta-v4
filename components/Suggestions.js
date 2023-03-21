@@ -3,9 +3,11 @@ import "minifaker/locales/en";
 import { useEffect, useState } from "react";
 
 export default function Suggestions({ username }) {
+  //状態変数suggestions
+  //ここでuseStateを使うことにより、userの様々な挙動に対応できる
   const [suggestions, setSuggestions] = useState([]);
-  console.log(suggestions);
   useEffect(() => {
+    //ローカル変数suggestions 上のsuggestionsとは違うもの
     const suggestions = minifaker.array(5, (i) => ({
       username: minifaker.username({ locale: "en" }).toLowerCase(),
       jobTitle: minifaker.jobTitle(),
