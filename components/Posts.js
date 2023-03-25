@@ -13,7 +13,7 @@ export default function Posts() {
       }
     );
     return unsubscribe;
-  });
+  }, [db]);
   return (
     <div>
       {posts.map((post) => (
@@ -23,7 +23,7 @@ export default function Posts() {
           username={post.data().username}
           userImg={post.data().profileImg}
           img={post.data().image}
-          caption={post.caption}
+          caption={post.data().caption}
         />
       ))}
     </div>
