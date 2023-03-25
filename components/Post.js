@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import {
   DotsHorizontalIcon,
   HeartIcon,
@@ -7,9 +7,34 @@ import {
   EmojiHappyIcon,
 } from "@heroicons/react/solid";
 import { useSession } from "next-auth/react";
+import { db } from "../firebase";
+import {
+  addDoc,
+  collection,
+  deleteDoc,
+  doc,
+  onSnapshot,
+  orderBy,
+  query,
+  serverTimestamp,
+  setDoc,
+} from "firebase/firestore";
 
 export default function Post({ img, userImg, caption, username, id }) {
   const { data: session } = useSession();
+  const [comment, setComment] = useState("");
+  // 情報がデータにいくのを待つため,asyncを使う
+  async function sendComment(event) {
+    event.preventDefault();
+    const commentToSend = comment;
+    setComment("");
+    await addDoc(collection(db, "posts", id, "comments"), {
+      comment: commentToSend,
+      username: session.user.username,
+      userImage: session.user.image,
+      timestamp: serverTimestamp(),
+    });
+  }
   return (
     <div className="bg-white my-7 border rounded-md">
       {/* Post header */}
@@ -19,9 +44,7 @@ export default function Post({ img, userImg, caption, username, id }) {
           src={userImg}
           alt={username}
         />
-        <p className="font-bold flex-1">
-          {username}
-        </p>
+        <p className="font-bold flex-1">{username}</p>
         <DotsHorizontalIcon className="h-5" />
       </div>
 
@@ -47,14 +70,24 @@ export default function Post({ img, userImg, caption, username, id }) {
 
       {/* Post input box */}
       {session && (
-        <form className="flex items-center ">
+        <form className="p-4 flex items-center ">
           <EmojiHappyIcon className="h-7" />
           <input
+            value={comment}
+            onChange={(event) => setComment(event.target.value)}
             type="text"
             className="border-none flex-1 focus:ring-0"
             placeholder="Enter your comment..."
           />
-          <button className="text-blue-400 font-bold">Post</button>
+          <button
+            // コメントがなかったらボタンを押せないようにしたい？
+            disabled={!comment.trim()}
+            className="text-blue-400 font-bold disabled:text-blue-200"
+            onClick={sendComment}
+            type="submit"
+          >
+            Post
+          </button>
         </form>
       )}
     </div>
