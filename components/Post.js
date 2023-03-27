@@ -1,4 +1,5 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
+import Moment from "react-moment";
 import {
   DotsHorizontalIcon,
   HeartIcon,
@@ -18,11 +19,24 @@ import {
   query,
   serverTimestamp,
   setDoc,
+  snapshot,
 } from "firebase/firestore";
 
 export default function Post({ img, userImg, caption, username, id }) {
   const { data: session } = useSession();
   const [comment, setComment] = useState("");
+  const [comments, setComments] = useState([]);
+  useEffect(() => {
+    const unsubscribe = onSnapshot(
+      query(
+        collection(db, "posts", id, "comments"),
+        orderBy("timestamp", "desc")
+      ),
+      (snapshot) => {
+        setComments(snapshot.docs);
+      }
+    );
+  }, [db, id]);
   // 情報がデータにいくのを待つため,asyncを使う
   async function sendComment(event) {
     event.preventDefault();
@@ -67,6 +81,25 @@ export default function Post({ img, userImg, caption, username, id }) {
         <span className="font-bold mr-2">{username}</span>
         {caption}
       </p>
+      {comments.length > 0 && (
+        <div className="mx-10 max-h-24 overflow-y-scroll scrollbar-none">
+          {comments.map((comment) => (
+            <div
+              key={comment.data().id}
+              className="flex items-center space-x-2 mb-2"
+            >
+              <img
+                className="h-7  rounded-full object-cover"
+                src={comment.data().userImage}
+                alt="user-image"
+              />
+              <p className="font-semibold">{comment.data().username}</p>
+              <p className="flex-1 truncate">{comment.data().comment}</p>
+              <Moment fromNow>{comment.data().timestamp?.toDate()}</Moment>
+            </div>
+          ))}
+        </div>
+      )}
 
       {/* Post input box */}
       {session && (
